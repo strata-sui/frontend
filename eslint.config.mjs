@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated Move bindings (sui-ts-codegen) — committed, not authored.
+    "lib/codegen/**",
   ]),
 ]);
 

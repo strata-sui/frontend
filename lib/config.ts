@@ -16,6 +16,11 @@ export const PREDICT_ID =
 
 export const CLOCK_ID = "0x6";
 
+// DeepBook Predict dependency package — supplies market_key::down for the
+// R3 escape-hatch PTB (MarketKey constructed in-PTB, not stored).
+export const PREDICT_PKG_ID =
+  "0xf5ea2b3749c65d6e56507cc35388719aadb28f9cab873696a2f8687f5c785138";
+
 // Strata vault share coin. Display symbol = "sSTRATA", 6 decimals.
 export const VAULT_COIN_TYPE = `${PACKAGE_ID}::vault::VAULT`;
 
