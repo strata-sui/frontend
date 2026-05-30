@@ -1,5 +1,7 @@
 import { Nav } from "@/components/Nav";
 import { VaultStateCard } from "@/components/VaultStateCard";
+import { SupplyForm } from "@/components/SupplyForm";
+import { WithdrawForm } from "@/components/WithdrawForm";
 
 export default function EarnPage() {
   return (
@@ -15,7 +17,15 @@ export default function EarnPage() {
               exposure; a quantified residual remains.
             </p>
           </div>
+
+          {/* Live vault state */}
           <VaultStateCard />
+
+          {/* Supply / Withdraw forms — side-by-side on desktop, stacked on mobile */}
+          <div id="r3" className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <SupplyForm />
+            <WithdrawForm />
+          </div>
         </section>
       </main>
     </>
