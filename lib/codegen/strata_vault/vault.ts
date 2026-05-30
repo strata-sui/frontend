@@ -1,11 +1,11 @@
 /**************************************************************
  * THIS FILE IS GENERATED AND SHOULD NOT BE MANUALLY MODIFIED *
  **************************************************************/
-import { MoveStruct, normalizeMoveArguments, type RawTransactionArgument } from '../utils/index.js';
+import { MoveStruct, normalizeMoveArguments, type RawTransactionArgument } from '../utils/index';
 import { bcs } from '@mysten/sui/bcs';
 import { type Transaction } from '@mysten/sui/transactions';
-import * as balance from './deps/0x0000000000000000000000000000000000000000000000000000000000000002/balance.js';
-import * as coin from './deps/0x0000000000000000000000000000000000000000000000000000000000000002/coin.js';
+import * as balance from './deps/0x0000000000000000000000000000000000000000000000000000000000000002/balance';
+import * as coin from './deps/0x0000000000000000000000000000000000000000000000000000000000000002/coin';
 const $moduleName = '0xb2986cb60834b8333f1d52edef5627042eff42588cafb2540292157f936b5999::vault';
 export const VAULT = new MoveStruct({ name: `${$moduleName}::VAULT`, fields: {
         dummy_field: bcs.bool()
