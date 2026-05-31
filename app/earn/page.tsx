@@ -2,6 +2,8 @@ import { Nav } from "@/components/Nav";
 import { VaultStateCard } from "@/components/VaultStateCard";
 import { SupplyForm } from "@/components/SupplyForm";
 import { WithdrawForm } from "@/components/WithdrawForm";
+import { LadderDisplay } from "@/components/LadderDisplay";
+import { R3Button } from "@/components/R3Button";
 
 export default function EarnPage() {
   return (
@@ -22,9 +24,19 @@ export default function EarnPage() {
           <VaultStateCard />
 
           {/* Supply / Withdraw forms — side-by-side on desktop, stacked on mobile */}
-          <div id="r3" className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SupplyForm />
             <WithdrawForm />
+          </div>
+
+          {/* DN hedge ladder — event-sourced view of open / R3-realized legs */}
+          <div className="mt-6">
+            <LadderDisplay />
+          </div>
+
+          {/* R3 liquidity escape-hatch — owns the #r3 anchor for the limiter callout */}
+          <div className="mt-6">
+            <R3Button />
           </div>
         </section>
       </main>
