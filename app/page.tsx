@@ -1,92 +1,114 @@
-import Link from "next/link";
 import { Nav } from "@/components/Nav";
+import { Hero } from "@/components/Hero";
+import { FlowDiagram } from "@/components/FlowDiagram";
 import { HonestDisclosureCard } from "@/components/HonestDisclosureCard";
+import { glass } from "@/lib/ui";
 import { CONTRACTS_TAG_URL, SIM_TAG_URL } from "@/lib/config";
+
+const PILLARS = [
+  {
+    label: "Tail truncation",
+    sub: "DN ladder cuts the crash left tail",
+    icon: (
+      <path d="M3 17l5-5 4 4 7-9" strokeLinecap="round" strokeLinejoin="round" />
+    ),
+  },
+  {
+    label: "R3 escape-hatch",
+    sub: "Liquid exit when the limiter freezes",
+    icon: (
+      <>
+        <path d="M14 3h7v7" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M21 3l-9 9" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </>
+    ),
+  },
+  {
+    label: "Optimal-f",
+    sub: "Your safe size, quantified",
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 3" strokeLinecap="round" strokeLinejoin="round" />
+      </>
+    ),
+  },
+  {
+    label: "Honest by design",
+    sub: "MARGINAL verdict, stated plainly",
+    icon: (
+      <path
+        d="M12 3l8 4v5c0 4.5-3 7.5-8 9-5-1.5-8-4.5-8-9V7l8-4z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+];
 
 export default function Home() {
   return (
     <>
       <Nav />
       <main className="flex flex-1 w-full flex-col items-center">
-        {/* Hero — Opsi-4 description verbatim (sim/README.md). */}
-        <section className="w-full max-w-3xl px-6 py-24 sm:py-32">
-          <p className="text-sm font-medium uppercase tracking-widest text-emerald-400 mb-6">
-            Sui Overflow 2026 · DeepBook track
-          </p>
-          <h1 className="text-3xl sm:text-5xl font-semibold leading-tight tracking-tight text-zinc-50">
-            A liquidity vault on DeepBook Predict that earns yield AND hedges
-            its own downside.
-          </h1>
-          <p className="mt-6 text-lg sm:text-xl leading-relaxed text-zinc-400">
-            Plus: a built-in calculator that quantifies your safe deposit size —
-            the question DeepBook itself flags as gating serious LP
-            participation.
-          </p>
+        {/* Hero */}
+        <section className="w-full min-h-screen flex flex-col justify-center px-5 sm:px-8 md:px-10 max-w-5xl mx-auto relative z-10">
+          <Hero />
 
-          <div className="mt-10 flex flex-wrap gap-4">
-            <Link
-              href="/earn"
-              className="rounded-full bg-emerald-500 px-6 py-3 text-sm font-medium text-zinc-950 hover:bg-emerald-400 transition-colors"
-            >
-              Open the Earn dashboard
-            </Link>
-            <Link
-              href="/calculator"
-              className="rounded-full border border-zinc-700 px-6 py-3 text-sm font-medium text-zinc-200 hover:border-zinc-500 transition-colors"
-            >
-              Try the safe-size calculator
-            </Link>
+          {/* Four pillars as icon cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-12">
+            {PILLARS.map((p) => (
+              <div key={p.label} className={`${glass} p-4`}>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#34d399"
+                  strokeWidth="1.6"
+                  className="mb-3"
+                  aria-hidden
+                >
+                  {p.icon}
+                </svg>
+                <p className="text-[14px] font-medium text-white">{p.label}</p>
+                <p className="text-[12px] text-white/50 mt-0.5 leading-snug">
+                  {p.sub}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Capital-flow diagram */}
+          <div className={`${glass} mt-6 px-6 py-5`}>
+            <p className="text-[11px] uppercase tracking-widest text-white/40 mb-2">
+              How capital moves
+            </p>
+            <FlowDiagram className="w-full max-w-lg h-auto" />
           </div>
         </section>
 
-        {/* Three pillars — honest framing (two hold, one collapses). */}
-        <section className="w-full max-w-3xl px-6 pb-24 grid gap-6 sm:grid-cols-3">
-          <Pillar
-            title="Tail truncation"
-            body="The SVI-shaped DN ladder truncates the crash left tail. p01 reduction is positive and grows with the LP-share f — a quantified residual tail, not an absolute claim."
-          />
-          <Pillar
-            title="Liquidity escape-hatch (R3)"
-            body="Post-crash the PLP withdraw limiter can freeze your capital. Strata's hedge leg redeems permissionlessly, bypassing the limiter — the only liquid exit in a crash."
-          />
-          <Pillar
-            title="f* methodology"
-            body="The calculator answers DeepBook's own gating question — what is my safe deposit size — from the §3 strike-local (u(k) − f) framework, anchored to the frozen simulator."
-          />
-        </section>
-
-        {/* Honest-disclosure card — mandatory on landing (frontend_brief F7). */}
-        <section className="w-full max-w-3xl px-6 pb-24">
+        {/* Honest-disclosure card — mandatory on landing. */}
+        <section className="w-full max-w-5xl px-5 sm:px-8 md:px-10 pb-24 relative z-10">
           <HonestDisclosureCard />
         </section>
 
-        <footer className="w-full border-t border-zinc-800 py-8 text-center text-xs text-zinc-500">
-          <p>
-            Backtested Gate-B verdict: MARGINAL (honest). Two-of-three pillars
-            hold under disjunctive synthesis.
-          </p>
-          <p className="mt-2 flex justify-center gap-4">
-            <a href={SIM_TAG_URL} className="hover:text-zinc-300 underline">
+        <footer className="w-full border-t border-white/5 py-8 text-center text-xs text-white/40 relative z-10">
+          <p className="flex justify-center gap-4 flex-wrap px-4">
+            <a href={SIM_TAG_URL} className="hover:text-white/70 underline">
               sim @ v0.1.0-simulator-closed
             </a>
-            <a
-              href={CONTRACTS_TAG_URL}
-              className="hover:text-zinc-300 underline"
-            >
+            <a href={CONTRACTS_TAG_URL} className="hover:text-white/70 underline">
               contracts @ v0.1.0-contracts-testnet
             </a>
           </p>
         </footer>
       </main>
     </>
-  );
-}
-
-function Pillar({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
-      <h3 className="text-base font-semibold text-zinc-100">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-zinc-400">{body}</p>
-    </div>
   );
 }

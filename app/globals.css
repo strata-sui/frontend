@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0b0d;
+  --foreground: #fafafa;
+  --accent-emerald: #34d399;
+  --accent-amber: #f59e0b;
 }
 
 @theme inline {
@@ -10,16 +12,64 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-/* Single dark theme (brief: light mode is post-submission). */
-:root {
-  --background: #09090b;
-  --foreground: #fafafa;
+  --font-heading: var(--font-heading), var(--font-geist-sans), sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* ── Motion primitives (plain CSS; not purged) ──────────────────────────── */
+
+@keyframes strata-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Staggered fade-up: add .strata-fade-up and an inline animation-delay. */
+.strata-fade-up {
+  opacity: 0;
+  animation: strata-fade-up 0.4s ease forwards;
+}
+
+@keyframes strata-flow-dash {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+.strata-flow-line {
+  stroke-dasharray: 6 6;
+  animation: strata-flow-dash 1.1s linear infinite;
+}
+
+@keyframes strata-glow-pulse {
+  0%,
+  100% {
+    text-shadow: 0 0 18px rgba(52, 211, 153, 0.55);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(52, 211, 153, 0.85);
+  }
+}
+
+.strata-glow {
+  animation: strata-glow-pulse 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .strata-fade-up,
+  .strata-flow-line,
+  .strata-glow {
+    animation: none;
+    opacity: 1;
+  }
 }

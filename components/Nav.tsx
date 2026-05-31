@@ -5,26 +5,26 @@ import { ConnectButton } from "@mysten/dapp-kit";
 
 export function Nav() {
   return (
-    <nav className="w-full border-b border-zinc-800 bg-zinc-950/80 backdrop-blur sticky top-0 z-10">
-      <div className="mx-auto max-w-5xl flex items-center justify-between px-6 py-4">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="font-semibold tracking-tight text-lg">
-            Strata
+    <nav className="fixed top-0 inset-x-0 z-20 px-5 sm:px-8 py-4 flex justify-between items-center backdrop-blur-md bg-[#0a0b0d]/60 border-b border-white/5">
+      <div className="flex items-center gap-8">
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 font-heading text-[22px] tracking-tight text-white"
+          style={{ fontFamily: "var(--font-heading)" }}
+        >
+          <span className="text-emerald-400">✳︎</span>
+          Strata
+        </Link>
+        <div className="hidden sm:flex items-center gap-6 text-[15px] text-white/70">
+          <Link href="/earn" className="hover:text-white transition-colors">
+            Vault
           </Link>
-          <div className="hidden sm:flex items-center gap-6 text-sm text-zinc-400">
-            <Link href="/earn" className="hover:text-zinc-100 transition-colors">
-              Earn
-            </Link>
-            <Link
-              href="/calculator"
-              className="hover:text-zinc-100 transition-colors"
-            >
-              Calculator
-            </Link>
-          </div>
+          <Link href="/calculator" className="hover:text-white transition-colors">
+            Calculator
+          </Link>
         </div>
-        <ConnectButton />
       </div>
+      <ConnectButton />
     </nav>
   );
 }
