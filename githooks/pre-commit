@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+# Strata frontend pre-commit guard.
+# Enforces diction rule B (CLAUDE.md §8) on every commit: the hedge TRUNCATES
+# the tail and leaves a QUANTIFIED RESIDUAL. Banned: "capped" / "loss-proof" /
+# "can't lose" / "risk-free" / "guaranteed returns/profit/yield".
+#
+# Activate (one-time, from repo root):
+#   git config core.hooksPath githooks
+# or copy this file to .git/hooks/pre-commit and chmod +x.
+
+npm run --silent diction-audit
+status=$?
+if [ "$status" -ne 0 ]; then
+  echo ""
+  echo "Commit blocked: fix the diction violation(s) above before committing."
+  exit 1
+fi
+exit 0

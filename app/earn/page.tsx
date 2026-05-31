@@ -4,6 +4,7 @@ import { SupplyForm } from "@/components/SupplyForm";
 import { WithdrawForm } from "@/components/WithdrawForm";
 import { LadderDisplay } from "@/components/LadderDisplay";
 import { R3Button } from "@/components/R3Button";
+import { HonestDisclosureCard } from "@/components/HonestDisclosureCard";
 
 export default function EarnPage() {
   return (
@@ -19,6 +20,9 @@ export default function EarnPage() {
               exposure; a quantified residual remains.
             </p>
           </div>
+
+          {/* Honest-disclosure card — mandatory on earn (frontend_brief F7). */}
+          <HonestDisclosureCard className="mb-6" />
 
           {/* Live vault state */}
           <VaultStateCard />

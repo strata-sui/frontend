@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Nav } from "@/components/Nav";
+import { HonestDisclosureCard } from "@/components/HonestDisclosureCard";
 import { CONTRACTS_TAG_URL, SIM_TAG_URL } from "@/lib/config";
 
 export default function Home() {
@@ -52,6 +53,11 @@ export default function Home() {
             title="f* methodology"
             body="The calculator answers DeepBook's own gating question — what is my safe deposit size — from the §3 strike-local (u(k) − f) framework, anchored to the frozen simulator."
           />
+        </section>
+
+        {/* Honest-disclosure card — mandatory on landing (frontend_brief F7). */}
+        <section className="w-full max-w-3xl px-6 pb-24">
+          <HonestDisclosureCard />
         </section>
 
         <footer className="w-full border-t border-zinc-800 py-8 text-center text-xs text-zinc-500">
