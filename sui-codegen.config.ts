@@ -7,9 +7,12 @@ import type { SuiCodegenConfig } from "@mysten/codegen/config";
 // and a wrong base on Windows (e.g. `'./lib\codegen\utils\index.js'` and
 // `'~root\deps\…'`). After any regen, re-fix the imports in
 // lib/codegen/strata_vault/* to POSIX relative paths:
-//   strata_vault/*.ts      -> '../utils/index.js'
-//   strata_vault/vault.ts  -> './deps/0x…02/{balance,coin}.js'
-//   deps/0x…02/*.ts        -> '../../../utils/index.js'
+//   strata_vault/*.ts      -> '../utils/index'
+//   strata_vault/vault.ts  -> './deps/0x…02/{balance,coin}'
+//   deps/0x…02/*.ts        -> '../../../utils/index'
+// ALSO strip the trailing `.js` extensions from every generated relative
+// import — Turbopack's browser bundler can't resolve `.js` onto the `.ts`
+// source (Next moduleResolution=bundler maps extensionless imports fine).
 const config: SuiCodegenConfig = {
   output: "./lib/codegen",
   packages: [
