@@ -190,7 +190,7 @@ export function WithdrawForm() {
   // ── not connected ──────────────────────────────────────────────────────
   if (!account) {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+      <div className="bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl p-5">
         <h3 className="text-sm font-semibold mb-3 tracking-tight">Withdraw sSTRATA</h3>
         <p className="text-xs text-zinc-500">
           Connect your wallet to withdraw from the vault.
@@ -202,7 +202,7 @@ export function WithdrawForm() {
   const isPending = status.type === "pending";
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 flex flex-col gap-4">
+    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl p-5 flex flex-col gap-4">
       <div>
         <h3 className="text-sm font-semibold tracking-tight">Withdraw sSTRATA</h3>
         <p className="text-xs text-zinc-500 mt-0.5">

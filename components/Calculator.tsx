@@ -40,6 +40,8 @@ import {
   decodeVaultGetters,
   type DecodedVaultGetters,
 } from "@/lib/sui";
+import { glassStatic } from "@/lib/ui";
+import { useCountUp } from "@/lib/useCountUp";
 
 // ── static sim data shape (public/sim-data/s5_gate_b.json) ────────────────────
 
@@ -175,6 +177,7 @@ export function Calculator() {
   const currentF = chain ? Number(chain.fBps) / 10_000 : null;
 
   const fStar = fStarPoint?.f ?? sim?.verdict.f_star ?? 0.05;
+  const fStarPct = useCountUp(fStar * 100, 700);
 
   // Deposit ceiling that keeps Strata a minority LP at f*:
   //   f = D / (D + pool) <= f*  =>  D <= f*/(1 - f*) · pool
@@ -186,17 +189,20 @@ export function Calculator() {
 
   if (simLoading || !sim) {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 text-sm text-zinc-500">
+      <div className={`${glassStatic} p-8 text-sm text-white/50`}>
         Loading simulator data…
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-sm shadow-xl overflow-hidden">
+    <div className={`${glassStatic} shadow-xl overflow-hidden`}>
       {/* Header */}
-      <div className="px-6 pt-6 pb-4 border-b border-zinc-800">
-        <h2 className="text-base font-semibold tracking-tight">
+      <div className="px-6 pt-6 pb-4 border-b border-white/10">
+        <h2
+          className="text-base font-semibold tracking-tight text-white"
+          style={{ fontFamily: "var(--font-heading)" }}
+        >
           What&apos;s my safe deposit size?
         </h2>
         <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
@@ -210,7 +216,7 @@ export function Calculator() {
 
       <div className="grid md:grid-cols-2 gap-0">
         {/* Controls */}
-        <div className="px-6 py-5 space-y-6 border-b md:border-b-0 md:border-r border-zinc-800">
+        <div className="px-6 py-5 space-y-6 border-b md:border-b-0 md:border-r border-white/10">
           <Slider
             label="Tail-aversion weight (w)"
             sub={
@@ -231,8 +237,8 @@ export function Calculator() {
               <span className="text-xs text-zinc-400">
                 f* at this tail-aversion
               </span>
-              <span className="font-mono text-lg text-emerald-400">
-                {(fStar * 100).toFixed(0)}%
+              <span className="font-mono text-lg text-emerald-400 strata-glow">
+                {fStarPct.toFixed(0)}%
               </span>
             </div>
             <div className="flex items-baseline justify-between">
@@ -309,7 +315,8 @@ export function Calculator() {
                 strokeWidth={2}
                 dot={{ r: 3, fill: "#10b981" }}
                 activeDot={{ r: 5 }}
-                isAnimationActive={false}
+                isAnimationActive
+                animationDuration={900}
               />
               {fStarPoint && (
                 <ReferenceDot
@@ -333,7 +340,7 @@ export function Calculator() {
       </div>
 
       {/* Honest discovery footer */}
-      <div className="px-6 py-4 border-t border-zinc-800 bg-zinc-950/40">
+      <div className="px-6 py-4 border-t border-white/10 bg-black/20">
         <p className="text-xs text-zinc-400 leading-relaxed">
           <span className="text-amber-400 font-medium">Honest discovery:</span>{" "}
           f*(w) at the {sim.n_paths_benign.toLocaleString()}-benign +{" "}

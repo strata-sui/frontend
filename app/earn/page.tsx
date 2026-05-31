@@ -10,35 +10,40 @@ export default function EarnPage() {
   return (
     <>
       <Nav />
-      <main className="flex flex-1 w-full flex-col items-center">
-        <section className="w-full max-w-3xl px-6 py-10">
+      <main className="flex flex-1 w-full flex-col items-center relative z-10">
+        <section className="w-full max-w-3xl px-5 sm:px-8 pt-28 pb-16">
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold tracking-tight">Earn</h1>
-            <p className="mt-2 text-sm text-zinc-400 max-w-xl">
-              Supply dUSDC to the Strata vault — earn PLP-style yield with
+            <h1
+              className="text-3xl font-medium tracking-tight text-white"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              Vault
+            </h1>
+            <p className="mt-2 text-sm text-white/55 max-w-xl">
+              Supply dUSDC to the Strata vault &mdash; earn PLP-style yield with
               downside-truncated tail risk. The hedge ladder reduces left-tail
               exposure; a quantified residual remains.
             </p>
           </div>
 
-          {/* Honest-disclosure card — mandatory on earn (frontend_brief F7). */}
+          {/* Honest-disclosure card — mandatory on the vault page. */}
           <HonestDisclosureCard className="mb-6" />
 
           {/* Live vault state */}
           <VaultStateCard />
 
-          {/* Supply / Withdraw forms — side-by-side on desktop, stacked on mobile */}
+          {/* Supply / Withdraw forms */}
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <SupplyForm />
             <WithdrawForm />
           </div>
 
-          {/* DN hedge ladder — event-sourced view of open / R3-realized legs */}
+          {/* DN hedge ladder — event-sourced */}
           <div className="mt-6">
             <LadderDisplay />
           </div>
 
-          {/* R3 liquidity escape-hatch — owns the #r3 anchor for the limiter callout */}
+          {/* R3 liquidity escape-hatch — owns the #r3 anchor */}
           <div className="mt-6">
             <R3Button />
           </div>

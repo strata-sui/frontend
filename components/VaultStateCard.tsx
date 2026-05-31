@@ -18,6 +18,7 @@ import { useSuiClient, useSuiClientQuery } from "@mysten/dapp-kit";
 import { useQuery } from "@tanstack/react-query";
 import { VAULT_ID, VAULT_COIN_TYPE, MICRO, SUISCAN_PACKAGE_URL } from "@/lib/config";
 import { buildVaultGettersTx, decodeVaultGetters, type DecodedVaultGetters } from "@/lib/sui";
+import { glassStatic } from "@/lib/ui";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -38,7 +39,7 @@ function bpsToPercent(bps: bigint): string {
 function Skeleton({ className = "" }: { className?: string }) {
   return (
     <span
-      className={`inline-block rounded bg-zinc-800 animate-pulse ${className}`}
+      className={`inline-block rounded bg-white/10 animate-pulse ${className}`}
     />
   );
 }
@@ -55,13 +56,13 @@ function StatRow({
   loading?: boolean;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 py-3 border-b border-zinc-800/60 last:border-0">
+    <div className="flex items-start justify-between gap-4 py-3 border-b border-white/5 last:border-0">
       <div>
-        <p className="text-xs text-zinc-400 leading-snug">{label}</p>
-        {sub && <p className="text-[10px] text-zinc-600 mt-0.5">{sub}</p>}
+        <p className="text-[12px] text-white/50 leading-snug">{label}</p>
+        {sub && <p className="text-[10px] text-white/30 mt-0.5">{sub}</p>}
       </div>
-      <div className="text-right font-mono text-sm text-zinc-100 shrink-0">
-        {loading ? <Skeleton className="w-24 h-4" /> : value}
+      <div className="text-right font-mono text-[18px] text-white tabular-nums shrink-0">
+        {loading ? <Skeleton className="w-24 h-5" /> : value}
       </div>
     </div>
   );
@@ -88,7 +89,7 @@ function HealthPill({ healthy }: { healthy: boolean }) {
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500 mb-1 mt-4 first:mt-0">
+    <p className="text-[10px] font-semibold tracking-widest uppercase text-emerald-400/70 mb-1 mt-5 first:mt-0">
       {children}
     </p>
   );
@@ -198,12 +199,17 @@ export function VaultStateCard() {
     : "—";
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-sm shadow-xl overflow-hidden">
+    <div className={`${glassStatic} shadow-xl overflow-hidden`}>
       {/* Header */}
-      <div className="px-5 pt-5 pb-4 border-b border-zinc-800 flex items-center justify-between gap-4">
+      <div className="px-5 pt-5 pb-4 border-b border-white/10 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold tracking-tight">Vault State</h2>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <h2
+            className="text-base font-semibold tracking-tight text-white"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            Vault State
+          </h2>
+          <p className="text-xs text-white/40 mt-0.5">
             Live on-chain · testnet ·{" "}
             <a
               href={SUISCAN_PACKAGE_URL}
@@ -350,12 +356,12 @@ export function VaultStateCard() {
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-zinc-800/60 flex items-center justify-between">
-        <p className="text-[10px] text-zinc-600">
+      <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between">
+        <p className="text-[10px] text-white/35">
           Data refreshes every 30 s. Tail truncation leaves a quantified
           residual — not a complete hedge.
         </p>
-        <p className="text-[10px] text-zinc-600 shrink-0 ml-4">
+        <p className="text-[10px] text-white/35 shrink-0 ml-4">
           Updated {lastRefreshed}
         </p>
       </div>

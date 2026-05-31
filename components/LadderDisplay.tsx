@@ -100,9 +100,12 @@ export function LadderDisplay() {
   });
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-sm shadow-xl overflow-hidden">
-      <div className="px-5 pt-5 pb-4 border-b border-zinc-800">
-        <h2 className="text-base font-semibold tracking-tight">
+    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden">
+      <div className="px-5 pt-5 pb-4 border-b border-white/10">
+        <h2
+          className="text-base font-semibold tracking-tight text-white"
+          style={{ fontFamily: "var(--font-heading)" }}
+        >
           DN hedge ladder
         </h2>
         <p className="text-xs text-zinc-500 mt-0.5">

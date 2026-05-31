@@ -125,7 +125,7 @@ export function SupplyForm() {
   // ── not connected ──────────────────────────────────────────────────────
   if (!account) {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+      <div className="bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl p-5">
         <h3 className="text-sm font-semibold mb-3 tracking-tight">Supply dUSDC</h3>
         <p className="text-xs text-zinc-500">
           Connect your wallet to supply dUSDC to the vault.
@@ -137,7 +137,7 @@ export function SupplyForm() {
   const isPending = status.type === "pending";
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 flex flex-col gap-4">
+    <div className="bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl p-5 flex flex-col gap-4">
       <div>
         <h3 className="text-sm font-semibold tracking-tight">Supply dUSDC</h3>
         <p className="text-xs text-zinc-500 mt-0.5">
@@ -197,11 +197,11 @@ export function SupplyForm() {
       <button
         onClick={handleSupply}
         disabled={isPending || !amountInput}
-        className="w-full rounded-lg bg-zinc-100 text-zinc-900 text-sm font-semibold py-2.5 px-4 hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full rounded-lg bg-emerald-400 text-black text-sm font-semibold py-2.5 px-4 hover:bg-emerald-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {isPending ? (
           <span className="flex items-center justify-center gap-2">
-            <span className="w-3.5 h-3.5 rounded-full border-2 border-zinc-500 border-t-zinc-900 animate-spin" />
+            <span className="w-3.5 h-3.5 rounded-full border-2 border-emerald-700 border-t-black animate-spin" />
             Waiting for signature…
           </span>
         ) : (
