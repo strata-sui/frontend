@@ -26,6 +26,7 @@ import {
   PREDICT_ID,
   PREDICT_PKG_ID,
   DUSDC_TYPE,
+  PACKAGE_ID_LATEST,
 } from "@/lib/config";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -70,17 +71,17 @@ export interface DecodedVaultGetters {
  */
 export function buildVaultGettersTx(): Transaction {
   const tx = new Transaction();
-  tx.add(sharePriceMicro({ arguments: [VAULT_ID] }));       // index 0
-  tx.add(availableForWithdraw({ arguments: [VAULT_ID] }));  // index 1
-  tx.add(withinMaxExposure({ arguments: [VAULT_ID] }));     // index 2
-  tx.add(fBps({ arguments: [VAULT_ID] }));                  // index 3
-  tx.add(maxExposureBps({ arguments: [VAULT_ID] }));        // index 4
-  tx.add(plpValue({ arguments: [VAULT_ID] }));              // index 5
-  tx.add(dusdcHeldValue({ arguments: [VAULT_ID] }));        // index 6
-  tx.add(dusdcInManager({ arguments: [VAULT_ID] }));        // index 7
-  tx.add(recommendedLadderSize({ arguments: [VAULT_ID] })); // index 8
-  tx.add(ladderBandLoBps({ arguments: [VAULT_ID] }));       // index 9
-  tx.add(ladderBandHiBps({ arguments: [VAULT_ID] }));       // index 10
+  tx.add(sharePriceMicro({ arguments: [VAULT_ID], package: PACKAGE_ID_LATEST }));       // index 0
+  tx.add(availableForWithdraw({ arguments: [VAULT_ID], package: PACKAGE_ID_LATEST }));  // index 1
+  tx.add(withinMaxExposure({ arguments: [VAULT_ID], package: PACKAGE_ID_LATEST }));     // index 2
+  tx.add(fBps({ arguments: [VAULT_ID], package: PACKAGE_ID_LATEST }));                  // index 3
+  tx.add(maxExposureBps({ arguments: [VAULT_ID], package: PACKAGE_ID_LATEST }));        // index 4
+  tx.add(plpValue({ arguments: [VAULT_ID], package: PACKAGE_ID_LATEST }));              // index 5
+  tx.add(dusdcHeldValue({ arguments: [VAULT_ID], package: PACKAGE_ID_LATEST }));        // index 6
+  tx.add(dusdcInManager({ arguments: [VAULT_ID], package: PACKAGE_ID_LATEST }));        // index 7
+  tx.add(recommendedLadderSize({ arguments: [VAULT_ID], package: PACKAGE_ID_LATEST })); // index 8
+  tx.add(ladderBandLoBps({ arguments: [VAULT_ID], package: PACKAGE_ID_LATEST }));       // index 9
+  tx.add(ladderBandHiBps({ arguments: [VAULT_ID], package: PACKAGE_ID_LATEST }));       // index 10
   return tx;
 }
 
@@ -152,6 +153,7 @@ export function buildSupplyTx(params: {
     supply({
       arguments: [VAULT_ID, PREDICT_ID, deposit],
       typeArguments: [DUSDC_TYPE],
+      package: PACKAGE_ID_LATEST,
     }),
   );
   tx.transferObjects([shares], params.sender);
@@ -184,6 +186,7 @@ export function buildRedeemTx(params: {
     redeem({
       arguments: [VAULT_ID, PREDICT_ID, shareInput],
       typeArguments: [DUSDC_TYPE],
+      package: PACKAGE_ID_LATEST,
     }),
   );
   tx.transferObjects([dusdc], params.sender);
@@ -230,6 +233,7 @@ export function buildR3Tx(params: {
         params.quantity,
       ],
       typeArguments: [DUSDC_TYPE],
+      package: PACKAGE_ID_LATEST,
     }),
   );
   return tx;
