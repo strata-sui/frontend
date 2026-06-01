@@ -32,10 +32,16 @@ point it at mainnet.
 
 | Handle | Object ID |
 |---|---|
-| Package | `0xb2986cb60834b8333f1d52edef5627042eff42588cafb2540292157f936b5999` |
+| Package (original / type id) | `0xb2986cb60834b8333f1d52edef5627042eff42588cafb2540292157f936b5999` |
+| Package (latest / call target, #41 v2) | `0x0256b69cbfa9071eb7eb4aa99263154157835b11ba2a71a7083ec6f22044a8c0` |
 | Vault (shared) | `0x44cc95d2a0a2ed3bff1ff36873a0a5ac859b1ef382eb55d53d77907aaf1053b9` |
-| Share coin type | `<package>::vault::VAULT` (display `sSTRATA`, 6 decimals) |
+| Share coin type | `<original-package>::vault::VAULT` (display `sSTRATA`, 6 decimals) |
 | Quote asset | testnet dUSDC |
+
+> The Move package was upgraded (v1→v2) for the #41 DN-ladder grid-snap fix. A
+> Move type id never changes across upgrades, so the share coin type uses the
+> **original** package id; moveCall targets use the **latest** id. See
+> `contracts @ v0.1.1-contracts-testnet`.
 
 A public Vercel preview is the intended live URL; until then, run locally with
 the three commands below — the app connects to testnet RPC on start.
@@ -62,8 +68,9 @@ run it manually with `npm run diction-audit`.
 
 - Simulator (frozen): **`sim @ v0.1.0-simulator-closed`** —
   https://github.com/strata-sui/sim/releases/tag/v0.1.0-simulator-closed
-- Move contracts (testnet): **`contracts @ v0.1.0-contracts-testnet`** —
-  https://github.com/strata-sui/contracts/releases/tag/v0.1.0-contracts-testnet
+- Move contracts (testnet): **`contracts @ v0.1.1-contracts-testnet`** (#41
+  grid-snap upgrade; v0.1.0 was the initial deploy) —
+  https://github.com/strata-sui/contracts/releases/tag/v0.1.1-contracts-testnet
 - Full methodology + limitations:
   https://github.com/strata-sui/sim/blob/v0.1.0-simulator-closed/SUBMISSION.md
 
