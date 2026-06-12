@@ -4,15 +4,19 @@
  * LadderDisplay — event-sourced view of the DN hedge ladder.
  *
  * There is NO ladder vector stored on the Vault. Each leg is reconstructed
- * from `ladder::LadderLegOpened` events; legs already realized via the R3
+ * from `ladder::LadderLegOpened` events; legs realized via the R3
  * escape-hatch are cross-flagged from `r3::R3LiquidityRealized` (matched on
  * oracle_id + strike).
  *
- * IMPORTANT on-chain reality: `ladder::open_hedge_ladder` is currently blocked
- * on testnet by a strike-grid alignment fix (tracked as #41, a Move-side
- * package upgrade). Until that ships there will be NO live LadderLegOpened
- * events — this component renders a calm, explanatory empty state, never a
- * crash. The wiring is complete and lights up the moment legs exist.
+ * Settlement status is derived from ON-CHAIN STATE, not event pagination:
+ * for each leg's oracle we read `settlement_price`; for settled oracles we
+ * read the manager's remaining position quantity for the leg's MarketKey
+ * (dynamic field on the PredictManager.positions table). qty > 0 means the
+ * leg is settled and crankable via R3; qty == 0 means it was already
+ * realized — by our wrapper (R3 event present) or externally via the
+ * underlying permissionless entry (anyone can crank; proceeds route to the
+ * position's manager either way). ITM/OTM is exact: a DOWN leg pays iff
+ * settlement < strike.
  */
 
 import { useSuiClient } from "@mysten/dapp-kit";
@@ -20,6 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   EVENT_LADDER_LEG_OPENED,
   EVENT_R3_REALIZED,
+  PREDICT_PKG_ID,
   VAULT_ID,
   MICRO,
 } from "@/lib/config";
@@ -42,9 +47,15 @@ interface R3Event {
   liquid_cash_delta: string;
 }
 
+type LegStatus =
+  | { kind: "open" }
+  | { kind: "settled-crankable" }
+  | { kind: "realized-itm"; payout: string; viaR3: boolean }
+  | { kind: "expired-otm" }
+  | { kind: "r3"; delta: string };
+
 interface Leg extends LegEvent {
-  redeemed: boolean;
-  liquidCashDelta?: string;
+  status: LegStatus;
 }
 
 function fmtUsd6(raw: string): string {
@@ -54,9 +65,73 @@ function fmtUsd6(raw: string): string {
   return `${whole.toLocaleString()}.${frac.toString().padStart(6, "0").slice(0, 2)}`;
 }
 
-async function fetchLegs(
-  client: ReturnType<typeof useSuiClient>,
-): Promise<Leg[]> {
+type Client = ReturnType<typeof useSuiClient>;
+
+/** Read a settled oracle's settlement price (null while live). */
+async function settlementPrice(client: Client, oracleId: string): Promise<bigint | null> {
+  try {
+    const o = await client.getObject({ id: oracleId, options: { showContent: true } });
+    const content = o.data?.content;
+    if (content && content.dataType === "moveObject") {
+      const f = (content as unknown as { fields: { settlement_price?: string | null } }).fields;
+      if (f.settlement_price !== null && f.settlement_price !== undefined) {
+        return BigInt(f.settlement_price);
+      }
+    }
+  } catch {
+    // RPC hiccup — treat as live
+  }
+  return null;
+}
+
+/** Remaining position qty in the manager for a DOWN MarketKey (0 = realized). */
+async function remainingQty(
+  client: Client,
+  positionsTableId: string,
+  leg: LegEvent,
+): Promise<bigint | null> {
+  try {
+    const f = await client.getDynamicFieldObject({
+      parentId: positionsTableId,
+      name: {
+        type: `${PREDICT_PKG_ID}::market_key::MarketKey`,
+        value: {
+          oracle_id: leg.oracle_id,
+          expiry: leg.expiry,
+          strike: leg.strike,
+          direction: 1, // DOWN
+        },
+      },
+    });
+    const content = f.data?.content;
+    if (content && content.dataType === "moveObject") {
+      const fields = (content as unknown as { fields: { value: string } }).fields;
+      return BigInt(fields.value ?? "0");
+    }
+  } catch {
+    // field absent / RPC hiccup — unknown
+  }
+  return null;
+}
+
+/** The manager's positions Table object id (one getObject). */
+async function positionsTableId(client: Client, managerId: string): Promise<string | null> {
+  try {
+    const o = await client.getObject({ id: managerId, options: { showContent: true } });
+    const content = o.data?.content;
+    if (content && content.dataType === "moveObject") {
+      const f = (content as unknown as {
+        fields: { positions?: { fields?: { id?: { id?: string } } } };
+      }).fields;
+      return f.positions?.fields?.id?.id ?? null;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+async function fetchLegs(client: Client): Promise<Leg[]> {
   const [legRes, r3Res] = await Promise.all([
     client.queryEvents({
       query: { MoveEventType: EVENT_LADDER_LEG_OPENED },
@@ -76,17 +151,63 @@ async function fetchLegs(
     if (j.vault_id === VAULT_ID) r3Index.set(`${j.oracle_id}:${j.strike}`, j);
   }
 
-  return legRes.data
+  const legs = legRes.data
     .map((e) => e.parsedJson as LegEvent)
-    .filter((j) => j.vault_id === VAULT_ID)
-    .map((j) => {
-      const hit = r3Index.get(`${j.oracle_id}:${j.strike}`);
-      return {
-        ...j,
-        redeemed: hit !== undefined,
-        liquidCashDelta: hit?.liquid_cash_delta,
-      };
-    });
+    .filter((j) => j.vault_id === VAULT_ID);
+
+  // Resolve per-oracle settlement + the manager positions table (once each).
+  const oracleIds = [...new Set(legs.map((l) => l.oracle_id))];
+  const settlements = new Map<string, bigint | null>();
+  await Promise.all(
+    oracleIds.map(async (oid) => settlements.set(oid, await settlementPrice(client, oid))),
+  );
+  const managerId = legs[0]?.manager_id;
+  const tableId = managerId ? await positionsTableId(client, managerId) : null;
+
+  return Promise.all(
+    legs.map(async (j): Promise<Leg> => {
+      const r3Hit = r3Index.get(`${j.oracle_id}:${j.strike}`);
+      if (r3Hit) {
+        return { ...j, status: { kind: "r3", delta: r3Hit.liquid_cash_delta } };
+      }
+      const settle = settlements.get(j.oracle_id) ?? null;
+      if (settle === null) return { ...j, status: { kind: "open" } };
+
+      // Oracle settled — DOWN pays iff settlement < strike.
+      const itm = settle < BigInt(j.strike);
+      const qty = tableId ? await remainingQty(client, tableId, j) : null;
+      if (qty !== null && qty > 0n) {
+        return { ...j, status: { kind: "settled-crankable" } };
+      }
+      // Position closed (or unknown -> assume closed once settled): realized.
+      return itm
+        ? { ...j, status: { kind: "realized-itm", payout: j.quantity, viaR3: false } }
+        : { ...j, status: { kind: "expired-otm" } };
+    }),
+  );
+}
+
+function StatusCell({ status }: { status: LegStatus }) {
+  switch (status.kind) {
+    case "open":
+      return <span className="text-white/40">Open</span>;
+    case "settled-crankable":
+      return <span className="text-amber-300">Settled — R3 crankable</span>;
+    case "r3":
+      return (
+        <span className="text-emerald-400">
+          R3 realized (+${fmtUsd6(status.delta)})
+        </span>
+      );
+    case "realized-itm":
+      return (
+        <span className="text-emerald-400">
+          ITM — realized (+${fmtUsd6(status.payout)})
+        </span>
+      );
+    case "expired-otm":
+      return <span className="text-white/35">Expired worthless (OTM)</span>;
+  }
 }
 
 export function LadderDisplay() {
@@ -109,9 +230,12 @@ export function LadderDisplay() {
           DN hedge ladder
         </h2>
         <p className="text-xs text-zinc-500 mt-0.5">
-          Event-sourced from <span className="font-mono">LadderLegOpened</span>.
-          All legs are DOWN binaries shaped to the PLP loss-onset band — the tail
-          truncation, a quantified residual rather than a complete hedge.
+          Event-sourced from <span className="font-mono">LadderLegOpened</span>;
+          settlement status read from on-chain state. All legs are DOWN binaries
+          shaped to the PLP loss-onset band — the tail truncation, a quantified
+          residual rather than a complete hedge. Settlement realization is
+          permissionless: anyone can crank, proceeds route to the vault&apos;s
+          manager.
         </p>
       </div>
 
@@ -123,13 +247,14 @@ export function LadderDisplay() {
         )}
 
         {!isLoading && (!legs || legs.length === 0) && (
-          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-4 py-5 text-center">
+          <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-5 text-center">
             <p className="text-sm text-zinc-400">No ladder legs open yet.</p>
             <p className="text-xs text-zinc-600 mt-1.5 leading-relaxed max-w-md mx-auto">
-              The admin-only <span className="font-mono">open_hedge_ladder</span>{" "}
-              entry is pending a strike-grid alignment upgrade on testnet. Once a
-              ladder is opened, its DOWN legs appear here and the R3 escape-hatch
-              activates per settled leg.
+              The admin-only{" "}
+              <span className="font-mono">open_hedge_ladder_aligned</span> entry
+              opens DOWN legs across the pinned loss-onset band. Once a ladder is
+              opened, its legs appear here and the R3 escape-hatch activates per
+              settled leg.
             </p>
           </div>
         )}
@@ -148,11 +273,15 @@ export function LadderDisplay() {
               </thead>
               <tbody className="font-mono text-zinc-200">
                 {legs
-                  .sort((a, b) => Number(a.leg_index) - Number(b.leg_index))
+                  .sort((a, b) =>
+                    a.oracle_id === b.oracle_id
+                      ? Number(a.leg_index) - Number(b.leg_index)
+                      : a.oracle_id.localeCompare(b.oracle_id),
+                  )
                   .map((leg) => (
                     <tr
                       key={`${leg.oracle_id}:${leg.strike}:${leg.leg_index}`}
-                      className="border-t border-zinc-800/60"
+                      className="border-t border-white/5"
                     >
                       <td className="py-2.5 pr-4">#{leg.leg_index}</td>
                       <td className="py-2.5 pr-4">
@@ -161,16 +290,7 @@ export function LadderDisplay() {
                       <td className="py-2.5 pr-4 text-zinc-400">DOWN</td>
                       <td className="py-2.5 pr-4">${fmtUsd6(leg.quantity)}</td>
                       <td className="py-2.5 pr-4">
-                        {leg.redeemed ? (
-                          <span className="text-emerald-400">
-                            R3 realized
-                            {leg.liquidCashDelta
-                              ? ` (+$${fmtUsd6(leg.liquidCashDelta)})`
-                              : ""}
-                          </span>
-                        ) : (
-                          <span className="text-zinc-500">Open</span>
-                        )}
+                        <StatusCell status={leg.status} />
                       </td>
                     </tr>
                   ))}
