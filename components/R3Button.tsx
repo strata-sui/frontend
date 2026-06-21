@@ -12,11 +12,11 @@
  * Verified at sim closure: the R3 path produced a $383,063 liquid-cash delta
  * versus a limiter-bound exit (see SUBMISSION.md, v0.1.0-simulator-closed).
  *
- * Execution requires a SETTLED leg's full coordinates — including the OracleSVI
- * shared-object id, which is NOT carried in the LadderLegOpened event. Until a
- * ladder is opened on testnet (blocked by the strike-grid fix, #41) there are
- * no settled legs to act on, so this renders an explanatory, disabled affordance.
- * The PTB wiring (buildR3Tx) is complete and lights up once a leg is passed in.
+ * As of v0.1.2 the strike-grid fix (#41) shipped and a real ladder is live on
+ * testnet, with legs settled (see LadderDisplay). The R3 path is permissionless:
+ * any settled DOWN leg can be cranked via r3::redeem_permissionless from any
+ * client. The PTB wiring (buildR3Tx) is complete; pass a SettledLeg to enable
+ * in-app execution.
  */
 
 import { useState, useCallback } from "react";
@@ -103,9 +103,10 @@ export function R3Button({ leg }: { leg?: SettledLeg }) {
 
       {!leg && (
         <p className="text-[11px] text-zinc-500 leading-relaxed">
-          No settled ladder leg available to realize. The admin-only ladder open
-          is pending a testnet strike-grid upgrade; once a leg settles, its R3
-          trigger activates here.
+          Realization is permissionless: any settled DOWN leg can be cranked via{" "}
+          <span className="font-mono">r3::redeem_permissionless</span> from any
+          client, and proceeds route to the vault&apos;s manager. See the ladder
+          above for each leg&apos;s live settlement status.
         </p>
       )}
 

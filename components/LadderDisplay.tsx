@@ -24,7 +24,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   EVENT_LADDER_LEG_OPENED,
   EVENT_R3_REALIZED,
-  PREDICT_PKG_ID,
   VAULT_ID,
   MICRO,
 } from "@/lib/config";
@@ -84,53 +83,6 @@ async function settlementPrice(client: Client, oracleId: string): Promise<bigint
   return null;
 }
 
-/** Remaining position qty in the manager for a DOWN MarketKey (0 = realized). */
-async function remainingQty(
-  client: Client,
-  positionsTableId: string,
-  leg: LegEvent,
-): Promise<bigint | null> {
-  try {
-    const f = await client.getDynamicFieldObject({
-      parentId: positionsTableId,
-      name: {
-        type: `${PREDICT_PKG_ID}::market_key::MarketKey`,
-        value: {
-          oracle_id: leg.oracle_id,
-          expiry: leg.expiry,
-          strike: leg.strike,
-          direction: 1, // DOWN
-        },
-      },
-    });
-    const content = f.data?.content;
-    if (content && content.dataType === "moveObject") {
-      const fields = (content as unknown as { fields: { value: string } }).fields;
-      return BigInt(fields.value ?? "0");
-    }
-  } catch {
-    // field absent / RPC hiccup — unknown
-  }
-  return null;
-}
-
-/** The manager's positions Table object id (one getObject). */
-async function positionsTableId(client: Client, managerId: string): Promise<string | null> {
-  try {
-    const o = await client.getObject({ id: managerId, options: { showContent: true } });
-    const content = o.data?.content;
-    if (content && content.dataType === "moveObject") {
-      const f = (content as unknown as {
-        fields: { positions?: { fields?: { id?: { id?: string } } } };
-      }).fields;
-      return f.positions?.fields?.id?.id ?? null;
-    }
-  } catch {
-    // ignore
-  }
-  return null;
-}
-
 async function fetchLegs(client: Client): Promise<Leg[]> {
   const [legRes, r3Res] = await Promise.all([
     client.queryEvents({
@@ -161,9 +113,6 @@ async function fetchLegs(client: Client): Promise<Leg[]> {
   await Promise.all(
     oracleIds.map(async (oid) => settlements.set(oid, await settlementPrice(client, oid))),
   );
-  const managerId = legs[0]?.manager_id;
-  const tableId = managerId ? await positionsTableId(client, managerId) : null;
-
   return Promise.all(
     legs.map(async (j): Promise<Leg> => {
       const r3Hit = r3Index.get(`${j.oracle_id}:${j.strike}`);
@@ -173,16 +122,18 @@ async function fetchLegs(client: Client): Promise<Leg[]> {
       const settle = settlements.get(j.oracle_id) ?? null;
       if (settle === null) return { ...j, status: { kind: "open" } };
 
-      // Oracle settled — DOWN pays iff settlement < strike.
+      // Oracle settled — a DOWN leg pays iff settlement < strike.
       const itm = settle < BigInt(j.strike);
-      const qty = tableId ? await remainingQty(client, tableId, j) : null;
-      if (qty !== null && qty > 0n) {
-        return { ...j, status: { kind: "settled-crankable" } };
+      if (!itm) {
+        // Settled at/above strike → worthless, nothing to crank.
+        return { ...j, status: { kind: "expired-otm" } };
       }
-      // Position closed (or unknown -> assume closed once settled): realized.
-      return itm
-        ? { ...j, status: { kind: "realized-itm", payout: j.quantity, viaR3: false } }
-        : { ...j, status: { kind: "expired-otm" } };
+      // ITM, and no R3 event matched above. We deliberately do NOT infer
+      // "realized" from the manager's position quantity — a settled position can
+      // read 0 as a settlement artifact, so labelling it "realized" without a
+      // real R3 event would overstate. ITM + no R3 event ⇒ crankable; only the
+      // r3Hit branch above ever asserts realization.
+      return { ...j, status: { kind: "settled-crankable" } };
     }),
   );
 }
@@ -192,7 +143,7 @@ function StatusCell({ status }: { status: LegStatus }) {
     case "open":
       return <span className="text-white/40">Open</span>;
     case "settled-crankable":
-      return <span className="text-amber-300">Settled — R3 crankable</span>;
+      return <span className="text-amber-300">ITM — settled · R3-crankable</span>;
     case "r3":
       return (
         <span className="text-emerald-400">

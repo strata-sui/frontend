@@ -16,7 +16,7 @@
 
 import { useSuiClient, useSuiClientQuery } from "@mysten/dapp-kit";
 import { useQuery } from "@tanstack/react-query";
-import { VAULT_ID, VAULT_COIN_TYPE, MICRO, SUISCAN_PACKAGE_URL } from "@/lib/config";
+import { VAULT_ID, MICRO, SUISCAN_PACKAGE_URL } from "@/lib/config";
 import { buildVaultGettersTx, decodeVaultGetters, type DecodedVaultGetters } from "@/lib/sui";
 import { glassStatic } from "@/lib/ui";
 
@@ -106,6 +106,7 @@ interface VaultFields {
   dusdc_in_manager: string;
   predict_manager_id: null | { fields: Record<string, string> } | string;
   plp_held: string | { fields: { value: string } };
+  share_treasury: { fields: { total_supply: { fields: { value: string } } } };
   recommended_ladder_size: string;
   ladder_band_lo_bps: string;
   ladder_band_hi_bps: string;
@@ -172,13 +173,7 @@ export function VaultStateCard() {
     staleTime: 15_000,
   });
 
-  // 3. Total supply of sSTRATA
-  const {
-    data: supplyData,
-    isLoading: supplyLoading,
-  } = useSuiClientQuery("getTotalSupply", { coinType: VAULT_COIN_TYPE });
-
-  const loading = objLoading || gettersLoading || supplyLoading;
+  const loading = objLoading || gettersLoading;
   const hasError = objError || gettersError;
 
   const fields = extractFields(objData?.data?.content);
@@ -188,8 +183,12 @@ export function VaultStateCard() {
   const grossValue =
     g ? g.plpValue + g.dusdcHeldValue + g.dusdcInManager : 0n;
 
-  const totalSupplyMicro = supplyData?.value
-    ? BigInt(supplyData.value)
+  // sSTRATA total supply lives inside the Vault's WRAPPED TreasuryCap
+  // (share_treasury.total_supply) — getTotalSupply cannot see a wrapped cap and
+  // returns 0, so we read it straight from the vault object already fetched.
+  const totalSupplyMicro = fields?.share_treasury?.fields?.total_supply?.fields
+    ?.value
+    ? BigInt(fields.share_treasury.fields.total_supply.fields.value)
     : 0n;
 
   const managerId = fields ? extractManagerId(fields.predict_manager_id) : null;
@@ -255,8 +254,8 @@ export function VaultStateCard() {
         />
         <StatRow
           label="Total sSTRATA supply"
-          value={!supplyLoading ? fmt6(totalSupplyMicro) : undefined}
-          loading={supplyLoading}
+          value={fields ? fmt6(totalSupplyMicro) : undefined}
+          loading={!fields && loading}
         />
 
         {/* Liquidity */}
